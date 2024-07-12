@@ -1,0 +1,156 @@
+Seleccionar los tres mejores jugadores menores de 18 años
+SELECT * FROM chess.elo WHERE nacimiento > 2006 ORDER BY elo DESC LIMIT 3
+
+Seleccionar cuales son las tres comunidades con más jugadores en activo
+SELECT comunidad, count(*) AS jugadores FROM chess.elo GROUP BY comunidad ORDER BY jugadores DESC LIMIT 3;
+
+Cuantos jugares menores de 18 años hay en cada comunidad autónoma
+SELECT comunidad, count(*) AS jugadores FROM chess.elo WHERE nacimiento > 2006 GROUP BY comunidad;
+
+Cuantos jugares menores de 18 años con elo por encima de 2000 hay en cada comunidad autónoma, ordenar de más a menos
+SELECT comunidad, count(*) AS jugadores FROM chess.elo WHERE nacimiento > 2006 AND elo > 2000 GROUP BY comunidad ORDER BY jugadores DESC;
+
+Cuantos jugares menores de 18 años hay en cada comunidad autónoma y cual es su elo de media, ordenar de manera descendiente por elo
+SELECT comunidad, AVG(elo) AS elo, count(*) AS jugadores FROM chess.elo WHERE nacimiento > 2006 GROUP BY comunidad ORDER BY elo DESC;
+
+Cuantas habitaciones hay de cada tipo
+SELECT bedrooms, count(bedrooms) AS total FROM properties GROUP BY bedrooms ORDER BY bedrooms ASC;
+
+Seleccionar a todos los extranjeros (que no sean de España)
+SELECT * FROM airbnb.properties WHERE hostLocation NOT LIKE "%Spain%";
+
+Cuantas habitaciones hay de cada tipo por localización
+SELECT hostLocation, SUM(bedrooms) AS total FROM properties GROUP BY hostLocation ORDER BY hostLocation ASC;
+
+PORCENTAJES:
+SELECT hostName, SUM(bedrooms) AS beds, (SUM(beds) * 100 / (SELECT SUM(beds) FROM properties)) AS percentage 
+FROM properties 
+GROUP BY hostName 
+ORDER BY beds DESC
+
+Lugares con más ganancias
+SELECT neighbourhoodCleansed, sum(price * numberOfReviewsLtm) AS total_price FROM properties GROUP BY neighbourhoodCleansed ORDER BY total_price DESC;
+
+Agrupar por países (hostLocation) y por HostName para decir cuantos registros hay por cada tipo de localización (count)
+contar por cuantos registros tiene por hostlocation cada hostname
+
+Enseña la ficha de los jugadores mayores de 55 años 
+SELECT * FROM chess.elo INNER JOIN fichas ON elo.ficha_id = fichas.id where nacimiento < 1969;
+
+Enseña el club de los jugadores mayores de 55 años 
+SELECT elo.nombre, clubs.nombre as nombre_club FROM chess.elo INNER JOIN fichas ON elo.ficha_id = fichas.id 
+LEFT JOIN clubs ON fichas.club_id = clubs.id
+WHERE nacimiento < 1969;
+
+Di cuantos jugadores tiene cada club
+SELECT clubs.nombre as nombre_club, count(elo.nombre) as jugadores_totales FROM chess.elo INNER JOIN fichas ON elo.ficha_id = fichas.id 
+INNER JOIN clubs ON fichas.club_id = clubs.id
+GROUP BY clubs.nombre;
+
+1. Cuantas ventas se ha hecho en cada franja de hora
+SELECT HOUR(hora_emision) as hora_emision, count(*) as ventas_totales FROM tpv.ventas GROUP BY HOUR(hora_emision) ORDER BY hora_emision;
+
+2. Cuantas ventas se ha hecho en cada día de la semana
+SELECT DAYOFWEEK(fecha_emision) as fecha_emision, count(*) as ventas_totales FROM tpv.ventas GROUP BY DAYOFWEEK(fecha_emision) ORDER BY fecha_emision;
+
+3. Cuantas ventas se ha hecho por mes
+SELECT MONTH(fecha_emision) as mes_emision, count(*) as ventas_totales FROM tpv.ventas 
+GROUP BY mes_emision ORDER BY mes_emision;
+
+4. Cuantas ventas se ha hecho por año
+SELECT YEAR(fecha_emision) as año_emision, count(*) as ventas_totales FROM tpv.ventas 
+GROUP BY año_emision ORDER BY año_emision;
+
+5. Cuantas ventas ha hecho cada mesa por mes y año
+SELECT mesas.numero AS mesa, YEAR(fecha_emision) AS año, MONTH(fecha_emision) AS mes, count(*) AS ventas_totales FROM tpv.ventas
+INNER JOIN mesas ON ventas.mesa_id = mesas.id
+GROUP BY mesa, año, mes
+ORDER BY mesa;
+
+6. Qué mesa ha facturado más para un mes concreto (por ejemplo febrero)
+SELECT mesas.numero AS mesa, MONTH(fecha_emision) AS mes, count(*) AS ventas_totales FROM tpv.ventas
+INNER JOIN mesas ON ventas.mesa_id = mesas.id
+WHERE MONTH(fecha_emision) = 2
+GROUP BY mesa, mes
+ORDER BY mesa;
+
+7. Cual ha sido el tiempo medio de servicio por mesa
+SELECT mesas.numero AS mesa, AVG(duracion_servicio) AS tiempo_medio FROM tpv.ventas
+INNER JOIN mesas ON ventas.mesa_id = mesas.id
+GROUP BY mesa
+ORDER BY mesa;
+
+8. Di cual ha sido el tiempo medio de servicio de la mesa con el número 6 cada mes y año
+SELECT mesas.numero AS mesa, YEAR(fecha_emision) AS año, MONTH(fecha_emision) AS mes, AVG(duracion_servicio) AS tiempo_medio FROM tpv.ventas
+INNER JOIN mesas ON ventas.mesa_id = mesas.id
+WHERE mesas.numero = 6
+GROUP BY mesa, año, mes
+ORDER BY año, mes ASC;
+
+9. Cual es el método de pago más usado
+SELECT metodos_pagos.nombre AS tipo, count(*) AS total FROM tpv.ventas
+INNER JOIN metodos_pagos WHERE ventas.metodo_pago_id = metodos_pagos.id
+GROUP BY tipo;
+
+10.Cuales son las categorías más vendidas
+SELECT productos_categorias.nombre as categoria, count(*) AS vendidos FROM tpv.tickets
+INNER JOIN precios ON tickets.precio_id = precios.id
+INNER JOIN productos ON precios.producto_id = productos.id
+INNER JOIN productos_categorias ON productos.categoria_id = productos_categorias.id
+GROUP BY categoria;
+
+11.Cuales son los plato más vendidos
+SELECT productos.nombre as producto, count(*) AS vendidos FROM tpv.tickets
+INNER JOIN precios ON tickets.precio_id = precios.id
+INNER JOIN productos ON precios.producto_id = productos.id
+INNER JOIN productos_categorias ON productos.categoria_id = productos_categorias.id
+WHERE productos.categoria_id = 8
+GROUP BY producto
+ORDER BY producto ASC;
+
+12. Bebidas más vendidas
+SELECT productos.nombre as producto, count(*) AS vendidos FROM tpv.tickets
+INNER JOIN precios ON tickets.precio_id = precios.id
+INNER JOIN productos ON precios.producto_id = productos.id
+INNER JOIN productos_categorias ON productos.categoria_id = productos_categorias.id
+WHERE NOT productos.categoria_id = 8
+GROUP BY producto
+ORDER BY producto ASC;
+
+13.Ventas por semana de cada producto por el cual está formado un plato
+SELECT productos.nombre as producto, DAYOFWEEK(ventas.fecha_emision) AS semana, count(*) AS vendidos FROM tpv.tickets
+INNER JOIN ventas ON tickets.venta_id = ventas.id
+INNER JOIN precios ON tickets.precio_id = precios.id
+INNER JOIN productos ON precios.producto_id = productos.id
+INNER JOIN productos_categorias ON productos.categoria_id = productos_categorias.id
+WHERE productos.categoria_id = 8
+GROUP BY producto, semana
+ORDER BY producto ASC;
+
+14. Mostrar el precio base total y el coste total de cada receta
+SELECT productos.nombre, precios.precio_base,
+SUM((productos_proveedores.precio_standard / productos_proveedores.peso_standard) * cantidad) AS precio_standard
+FROM tpv.recetas
+INNER JOIN productos ON recetas.producto_id = productos.id
+INNER JOIN productos_proveedores ON recetas.producto_proveedor_id = productos_proveedores.id
+INNER JOIN precios ON productos.id = precios.producto_id
+group by productos.nombre, precios.precio_base
+
+15. Cuantos platos se pide de media en cada venta por mesa
+
+
+16. Media de ventas por semana de cada plato
+
+17. Suma el dinero ganado (precio_total) por las ventas realizadas el día '2022-05-02' y saca la media que se suele ganar ese día de la semana
+
+18. Cuanto dinero de beneficio se ha sacado por mes
+
+19. Cantidad media de ingredientes que se consumen por semana
+
+20. Precio compra media semanal de cada ingrediente
+
+21. A partir de las ventas realizadas qué platos salen más rentables
+
+22. Precio total de la compra semanal
+
+23. Productos recomendados
