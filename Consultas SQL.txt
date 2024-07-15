@@ -137,9 +137,26 @@ INNER JOIN precios ON productos.id = precios.producto_id
 group by productos.nombre, precios.precio_base
 
 15. Cuantos platos se pide de media en cada venta por mesa
-
+SELECT subquery.mesa, AVG(ventas) AS ventas FROM (
+  SELECT mesas.numero AS mesa, count(venta_id) AS ventas FROM tpv.tickets
+  INNER JOIN mesas ON tickets.mesa_id = mesas.id
+  GROUP BY mesa, venta_id
+  ) AS subquery
+GROUP BY mesa
+ORDER BY mesa
 
 16. Media de ventas por semana de cada plato
+SELECT plato, AVG(media) AS media FROM (
+	SELECT subquery.semana as numero_semana, subquery.plato, AVG(subquery.total) as media FROM (
+		SELECT WEEK(fecha_emision) as semana, productos.nombre as plato, count(venta_id) AS total FROM tpv.ventas
+		INNER JOIN tickets ON ventas.id = tickets.venta_id
+		INNER JOIN precios ON tickets.precio_id = precios.id
+		INNER JOIN productos ON precios.producto_id = productos.id
+		GROUP BY semana, plato
+	) AS subquery
+	GROUP BY numero_semana, plato
+) media_por_semana
+GROUP BY plato
 
 17. Suma el dinero ganado (precio_total) por las ventas realizadas el día '2022-05-02' y saca la media que se suele ganar ese día de la semana
 
