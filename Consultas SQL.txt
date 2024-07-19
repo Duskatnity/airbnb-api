@@ -159,6 +159,14 @@ SELECT plato, AVG(media) AS media FROM (
 GROUP BY plato
 
 17. Suma el dinero ganado (precio_total) por las ventas realizadas el día '2022-05-02' y saca la media que se suele ganar ese día de la semana
+SELECT 
+    (SELECT SUM(precio_total) 
+     FROM ventas 
+     WHERE fecha_emision = '2022-05-02') AS total_ganado,
+    (SELECT AVG(precio_total) 
+     FROM ventas 
+     WHERE DAYOFWEEK(fecha_emision) = DAYOFWEEK('2022-05-02')) AS media_ganada_dia_semana;
+
 
 18. Cuanto dinero de beneficio se ha sacado por mes
 
